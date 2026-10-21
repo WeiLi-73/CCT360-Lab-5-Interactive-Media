@@ -67,3 +67,197 @@ soundscape.addEventListener("error", () => {
   audioStatus.textContent =
     "The audio could not be loaded. Please check the audio file location.";
 });
+const detailLayer = document.getElementById("hotspotLayer");
+const detailScene = document.getElementById("gardenScene");
+
+const gardenDetails = [
+  {
+    label: "Water",
+    source: "audio/garden-water.ogg",
+    x: 0,
+    y: 0.31,
+    width: 0.11,
+    height: 0.15,
+    shape: "polygon(0% 40%, 30% 20%, 76% 38%, 100% 62%, 100% 97%, 0% 97%)"
+  },
+  {
+    label: "Birdsong",
+    source: "audio/garden-birds.ogg",
+    x: 0.225,
+    y: 0.58,
+    width: 0.135,
+    height: 0.255,
+    shape: "polygon(35% 0%, 70% 5%, 95% 28%, 85% 58%, 100% 72%, 80% 85%, 55% 100%, 20% 92%, 5% 60%, 0% 25%)"
+  },
+  {
+    label: "Guqin",
+    source: "audio/guqin-liu-shui.ogg",
+    x: 0.118,
+    y: 0.203,
+    width: 0.056,
+    height: 0.085,
+    shape: "polygon(50% 0%, 100% 38%, 94% 84%, 50% 100%, 5% 82%, 0% 38%)"
+  }
+];
+
+const detailAudio = new Audio();
+detailAudio.preload = "metadata";
+
+let activeDetailButton = null;
+let detailTimer = null;
+let detailRequest = 0;
+let savedSoundscapeVolume = 1;
+let duckedVolume = null;
+
+const stopDetailButton = document.createElement("button");
+stopDetailButton.type = "button";
+stopDetailButton.className = "detail-stop";
+stopDetailButton.textContent = "Stop detail sound";
+stopDetailButton.hidden = true;
+audioStatus.after(stopDetailButton);
+
+function stopGardenDetail() {
+  detailRequest += 1;
+  detailAudio.pause();
+  clearTimeout(detailTimer);
+  detailTimer = null;
+
+  if (activeDetailButton) {
+    activeDetailButton.classList.remove("is-active");
+    activeDetailButton.setAttribute("aria-pressed", "false");
+  }
+
+  activeDetailButton = null;
+  stopDetailButton.hidden = true;
+
+  if (
+    duckedVolume !== null &&
+    Math.abs(soundscape.volume - duckedVolume) < 0.001
+  ) {
+    soundscape.volume = savedSoundscapeVolume;
+  }
+
+  duckedVolume = null;
+
+  if (hasEntered) {
+    instruction.textContent = "Select a garden detail to listen.";
+  }
+}
+
+function playGardenDetail(detail, button) {
+  const wasActive = activeDetailButton === button;
+  stopGardenDetail();
+
+  if (wasActive) return;
+
+  const request = detailRequest;
+
+  savedSoundscapeVolume = soundscape.volume;
+  detailAudio.src = detail.source;
+  detailAudio.volume = savedSoundscapeVolume * 0.75;
+  detailAudio.muted = soundscape.muted;
+
+  if (!soundscape.paused) {
+    duckedVolume = savedSoundscapeVolume * 0.3;
+    soundscape.volume = duckedVolume;
+  }
+
+  activeDetailButton = button;
+  button.classList.add("is-active");
+  button.setAttribute("aria-pressed", "true");
+
+  stopDetailButton.hidden = false;
+  instruction.textContent = `Listening to ${detail.label.toLowerCase()}.`;
+
+  detailAudio.play().then(() => {
+    if (request !== detailRequest) return;
+
+    detailTimer = setTimeout(stopGardenDetail, 7000);
+  }).catch(() => {
+    if (request !== detailRequest) return;
+
+    stopGardenDetail();
+    audioStatus.textContent =
+      "This detail sound could not be loaded. Please check its audio file.";
+  });
+}
+
+const detailElements = gardenDetails.map((detail) => {
+  const button = document.createElement("button");
+
+  button.type = "button";
+  button.className = "detail-hotspot";
+  button.setAttribute("aria-label", `Listen to ${detail.label.toLowerCase()}`);
+  button.setAttribute("aria-pressed", "false");
+
+  button.style.left = `${detail.x * 100}%`;
+  button.style.top = `${detail.y * 100}%`;
+  button.style.width = `${detail.width * 100}%`;
+  button.style.height = `${detail.height * 100}%`;
+  button.style.setProperty("--shape", detail.shape);
+
+  const imagePatch = document.createElement("span");
+  imagePatch.className = "detail-image";
+  imagePatch.setAttribute("aria-hidden", "true");
+
+  const mark = document.createElement("span");
+  mark.className = "hotspot-mark";
+  mark.setAttribute("aria-hidden", "true");
+
+  const label = document.createElement("span");
+  label.className = "hotspot-label";
+  label.textContent = detail.label;
+
+  button.append(imagePatch, mark, label);
+  detailLayer.append(button);
+
+  button.addEventListener("click", () => {
+    playGardenDetail(detail, button);
+  });
+
+  return { detail, imagePatch };
+});
+
+function alignGardenDetails() {
+  const width = detailScene.clientWidth;
+  const height = detailScene.clientHeight;
+
+  detailElements.forEach(({ detail, imagePatch }) => {
+    imagePatch.style.backgroundSize = `${width}px ${height}px`;
+
+    imagePatch.style.backgroundPosition =
+      `${-detail.x * width}px ${-detail.y * height}px`;
+  });
+}
+
+new ResizeObserver(alignGardenDetails).observe(detailScene);
+gardenImage.addEventListener("load", alignGardenDetails);
+alignGardenDetails();
+
+detailLayer.inert = !hasEntered;
+
+enterButton.addEventListener("click", () => {
+  detailLayer.inert = false;
+});
+
+soundscape.addEventListener("play", () => {
+  detailLayer.inert = false;
+});
+
+soundscape.addEventListener("pause", stopGardenDetail);
+soundscape.addEventListener("ended", stopGardenDetail);
+detailAudio.addEventListener("ended", stopGardenDetail);
+
+soundscape.addEventListener("volumechange", () => {
+  detailAudio.muted = soundscape.muted;
+
+  if (
+    activeDetailButton &&
+    (duckedVolume === null ||
+      Math.abs(soundscape.volume - duckedVolume) > 0.001)
+  ) {
+    detailAudio.volume = soundscape.volume * 0.75;
+  }
+});
+
+stopDetailButton.addEventListener("click", stopGardenDetail);
