@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Echoes of Suzhou</title>
+
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+
+<body>
+  <header class="site-header">
+    <p class="eyebrow">A GARDEN SOUNDSCAPE</p>
+    <h1>Echoes of Suzhou</h1>
+    <p class="introduction">
+      A personal reflection on my hometown,
+      expressed through garden sounds and a literary landscape.
+    </p>
+  </header>
+
+  <main>
+    <section class="garden" aria-label="Interactive garden illustration">
+      <div class="garden-viewport" id="gardenViewport">
+        <div class="garden-scene" id="gardenScene">
+          <img
+            class="garden-image"
+            src="images/daguanyuan.jpg"
+            alt="Sun Wen's illustration of Grand View Garden from Dream of the Red Chamber."
+            draggable="false"
+          >
+
+          <div class="hotspot-layer" id="hotspotLayer"></div>
+        </div>
+      </div>
+
+      <div class="garden-entrance" id="gardenEntrance">
+        <p>Take a moment. Listen closely.</p>
+        <button type="button" id="enterButton">
+          Enter the Garden
+        </button>
+      </div>
+
+      <p class="garden-instruction" id="gardenInstruction">
+        Explore the painting and discover its sounds.
+      </p>
+    </section>
+
+    <section class="listening-panel" aria-labelledby="listeningTitle">
+      <div>
+        <p class="eyebrow">LISTEN</p>
+        <h2 id="listeningTitle">A Moment in the Garden</h2>
+        <p>A 75-second composition of water, birdsong and guqin.</p>
+      </div>
+
+      <audio id="soundscape" controls preload="metadata">
+        <source
+          src="audio/Suzhou-Soundscape.mp3"
+          type="audio/mpeg"
+        >
+        Your browser does not support audio playback.
+      </audio>
+
+      <p id="audioStatus" role="status" aria-live="polite"></p>
+    </section>
+
+    <details class="credits">
+      <summary>About the Project &amp; References</summary>
+
+      <p>
+        This project reflects on Suzhou, Jiangsu, China,
+        through an imagined garden soundscape.
+        The illustration depicts the fictional Grand View Garden,
+        rather than a specific garden in Suzhou.
+        The sourced recordings are used as sound design materials,
+        not presented as recordings made in Suzhou.
+      </p>
+
+      <ol>
+        <li>
+          Sun Wen.
+          <a href="https://commons.wikimedia.org/wiki/File:Sun_Wen_Red_Chamber_Daguanyuan.jpg">
+            Sun Wen Red Chamber Daguanyuan
+          </a>.
+          Wikimedia Commons. Public domain.
+        </li>
+
+        <li>
+          Charlie Huang.
+          <a href="https://commons.wikimedia.org/wiki/File:Liu_Shui.ogg">
+            Liu Shui (Flowing Water)
+          </a>.
+          Guqin performance, 2006.
+          <a href="https://creativecommons.org/licenses/by/2.5/">
+            CC BY 2.5
+          </a>.
+          An excerpt was trimmed and mixed with environmental sounds.
+        </li>
+
+        <li>
+          Fg2.
+          <a href="https://commons.wikimedia.org/wiki/File:Flowing-water-100019.ogg">
+            Flowing-water-100019
+          </a>.
+          2008. Wikimedia Commons. Public domain.
+          Repeated and edited for this composition.
+        </li>
+
+        <li>
+          ezwa.
+          <a href="https://commons.wikimedia.org/wiki/File:Birds_singing_in_garden.ogg">
+            Birds singing in garden
+          </a>.
+          2007. Recorded in a garden in Belgium.
+          Wikimedia Commons. Public domain.
+          Edited for this composition.
+        </li>
+      </ol>
+    </details>
+  </main>
+
+  <footer class="site-footer">
+    <p>Created by Wei Li · CCT360 Lab 5</p>
+  </footer>
+</body>
+</html>
