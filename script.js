@@ -261,3 +261,193 @@ soundscape.addEventListener("volumechange", () => {
 });
 
 stopDetailButton.addEventListener("click", stopGardenDetail);
+
+const gardenViewport = document.getElementById("gardenViewport");
+const gardenSection = gardenViewport.closest(".garden");
+
+const gardenTools = document.createElement("div");
+gardenTools.className = "garden-tools";
+gardenTools.setAttribute("role", "group");
+gardenTools.setAttribute("aria-label", "Painting view controls");
+
+gardenTools.innerHTML = `
+  <button type="button" id="gardenZoomOut">Zoom out</button>
+  <output id="gardenZoomLevel" aria-live="polite">100%</output>
+  <button type="button" id="gardenZoomIn">Zoom in</button>
+  <button type="button" id="gardenReset">Reset view</button>
+`;
+
+gardenSection.append(gardenTools);
+
+const zoomInButton = document.getElementById("gardenZoomIn");
+const zoomOutButton = document.getElementById("gardenZoomOut");
+const resetViewButton = document.getElementById("gardenReset");
+const zoomLevel = document.getElementById("gardenZoomLevel");
+
+let viewScale = 1;
+let viewX = 0;
+let viewY = 0;
+let dragStart = null;
+let viewControlsEnabled = false;
+
+gardenViewport.tabIndex = 0;
+gardenViewport.setAttribute("role", "region");
+gardenViewport.setAttribute(
+  "aria-label",
+  "Garden painting. Zoom in, then drag or use arrow keys to explore."
+);
+
+function updateGardenView() {
+  const minimumX = Math.min(
+    0,
+    gardenViewport.clientWidth - detailScene.offsetWidth * viewScale
+  );
+
+  const minimumY = Math.min(
+    0,
+    gardenViewport.clientHeight - detailScene.offsetHeight * viewScale
+  );
+
+  viewX = Math.max(minimumX, Math.min(0, viewX));
+  viewY = Math.max(minimumY, Math.min(0, viewY));
+
+  detailScene.style.transform =
+    `translate(${viewX}px, ${viewY}px) scale(${viewScale})`;
+
+  gardenViewport.classList.toggle("is-zoomed", viewScale > 1);
+
+  zoomLevel.value = `${Math.round(viewScale * 100)}%`;
+  zoomOutButton.disabled = viewScale <= 1;
+  zoomInButton.disabled = viewScale >= 2.5;
+}
+
+function changeGardenZoom(nextScale) {
+  const newScale = Math.max(1, Math.min(2.5, nextScale));
+
+  const centerX = gardenViewport.clientWidth / 2;
+  const centerY = gardenViewport.clientHeight / 2;
+
+  const imageX = (centerX - viewX) / viewScale;
+  const imageY = (centerY - viewY) / viewScale;
+
+  viewX = centerX - imageX * newScale;
+  viewY = centerY - imageY * newScale;
+  viewScale = newScale;
+
+  updateGardenView();
+}
+
+zoomInButton.addEventListener("click", () => {
+  changeGardenZoom(viewScale + 0.25);
+});
+
+zoomOutButton.addEventListener("click", () => {
+  changeGardenZoom(viewScale - 0.25);
+});
+
+resetViewButton.addEventListener("click", () => {
+  viewScale = 1;
+  viewX = 0;
+  viewY = 0;
+
+  updateGardenView();
+});
+
+gardenViewport.addEventListener("pointerdown", (event) => {
+  if (viewScale <= 1) return;
+  if (event.pointerType === "mouse" && event.button !== 0) return;
+  if (event.target.closest("button")) return;
+
+  event.preventDefault();
+
+  dragStart = {
+    pointerId: event.pointerId,
+    pointerX: event.clientX,
+    pointerY: event.clientY,
+    imageX: viewX,
+    imageY: viewY
+  };
+
+  gardenViewport.setPointerCapture(event.pointerId);
+  gardenViewport.classList.add("is-dragging");
+});
+
+gardenViewport.addEventListener("pointermove", (event) => {
+  if (!dragStart || event.pointerId !== dragStart.pointerId) return;
+
+  viewX = dragStart.imageX + event.clientX - dragStart.pointerX;
+  viewY = dragStart.imageY + event.clientY - dragStart.pointerY;
+
+  updateGardenView();
+});
+
+function finishGardenDrag(event) {
+  if (!dragStart || event.pointerId !== dragStart.pointerId) return;
+
+  if (gardenViewport.hasPointerCapture(event.pointerId)) {
+    gardenViewport.releasePointerCapture(event.pointerId);
+  }
+
+  dragStart = null;
+  gardenViewport.classList.remove("is-dragging");
+}
+
+gardenViewport.addEventListener("pointerup", finishGardenDrag);
+gardenViewport.addEventListener("pointercancel", finishGardenDrag);
+
+gardenViewport.addEventListener("keydown", (event) => {
+  if (event.target !== gardenViewport || viewScale <= 1) return;
+
+  const movements = {
+    ArrowLeft: [40, 0],
+    ArrowRight: [-40, 0],
+    ArrowUp: [0, 40],
+    ArrowDown: [0, -40]
+  };
+
+  const movement = movements[event.key];
+  if (!movement) return;
+
+  event.preventDefault();
+  viewX += movement[0];
+  viewY += movement[1];
+
+  updateGardenView();
+});
+
+function enableGardenView() {
+  if (viewControlsEnabled) return;
+
+  viewControlsEnabled = true;
+  gardenSection.classList.add("is-entered");
+
+  instruction.textContent =
+    "Select a labeled detail to listen. Zoom in, then drag to explore.";
+}
+
+enterButton.addEventListener("click", enableGardenView);
+soundscape.addEventListener("play", enableGardenView);
+
+new ResizeObserver(updateGardenView).observe(gardenViewport);
+gardenImage.addEventListener("load", updateGardenView);
+
+updateGardenView();
+const stopAllSoundButton = document.createElement("button");
+
+stopAllSoundButton.type = "button";
+stopAllSoundButton.className = "detail-stop";
+stopAllSoundButton.textContent = "Stop all sound";
+
+soundscape.insertAdjacentElement("afterend", stopAllSoundButton);
+
+stopAllSoundButton.addEventListener("click", () => {
+  soundscape.pause();
+  stopGardenDetail();
+
+  if (soundscape.readyState > 0) {
+    soundscape.currentTime = 0;
+  }
+
+  audioStatus.textContent =
+    "All sound stopped. Select play to start the soundscape again.";
+});

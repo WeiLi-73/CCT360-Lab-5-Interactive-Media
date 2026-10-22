@@ -414,3 +414,133 @@ a {
 .detail-stop[hidden] {
   display: none;
 }
+/* Clear opening instructions */
+.garden-entrance h2 {
+  margin: 0;
+  color: #fff4de;
+  font-size: clamp(24px, 3vw, 38px);
+}
+
+.garden-entrance .welcome-copy {
+  max-width: 440px;
+  font-size: 14px;
+  font-style: normal;
+  line-height: 1.7;
+}
+
+.welcome-steps {
+  max-width: 460px;
+  margin: 0;
+  padding-left: 24px;
+  font-size: 14px;
+  line-height: 1.7;
+  text-align: left;
+}
+
+.welcome-steps li {
+  padding-left: 4px;
+  margin-bottom: 10px;
+}
+
+.listening-panel > div {
+  max-width: 520px;
+}
+
+/* Keep hotspot names visible */
+.hotspot-label {
+  opacity: 1;
+}
+
+/* Keep the leftmost label inside the painting */
+.detail-hotspot:first-child .hotspot-label {
+  left: 15%;
+  transform: none;
+}
+
+@media (max-width: 600px) {
+  .garden-entrance {
+    gap: 10px;
+    padding: 18px;
+  }
+
+  .welcome-steps {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .garden-entrance .welcome-copy {
+    font-size: 12px;
+  }
+}
+/* Panorama navigation */
+.garden-scene {
+  transform-origin: top left;
+}
+
+.garden-viewport {
+  touch-action: pan-y;
+}
+
+.garden-viewport.is-zoomed {
+  cursor: grab;
+  touch-action: none;
+}
+
+.garden-viewport.is-dragging {
+  cursor: grabbing;
+}
+
+.garden-tools {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 4;
+  display: none;
+  align-items: center;
+  gap: 5px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  background: rgba(242, 234, 220, 0.95);
+}
+
+.garden.is-entered .garden-tools {
+  display: flex;
+}
+
+.garden-tools button {
+  padding: 8px 10px;
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+  font-size: 12px;
+}
+
+.garden-tools button:hover:not(:disabled) {
+  color: var(--cinnabar);
+  background: rgba(140, 62, 50, 0.08);
+}
+
+.garden-tools button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.garden-tools output {
+  min-width: 40px;
+  color: var(--muted);
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .garden-tools {
+    top: 14px;
+    right: 14px;
+  }
+
+  .garden-tools button {
+    padding: 7px;
+    font-size: 11px;
+  }
+}
